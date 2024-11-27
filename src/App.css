@@ -1,0 +1,41 @@
+/* Menyembunyikan scrollbar dari history section calculator */
+.no-scrollbar::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, and Edge */
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+    scrollbar-width: none; /* Firefox */
+}
+
+body {
+    @apply bg-gradient-to-r from-purple-700 via-purple-500 to-pink-500;
+}
+
+.containerSection {
+    @apply flex flex-col w-screen h-screen items-center;
+}
+
+.topSection {
+    @apply flex flex-col xl:w-2/12 xl:h-1/6 w-6/12 h-1/6 mt-16 border border-black bg-gray-600;
+}
+
+.bottomSection {
+    @apply container grid grid-cols-4 grid-rows-5 xl:w-2/12 xl:h-3/6 w-6/12 h-3/6 bg-blue-100 border border-black bg-black;
+}
+
+.historySection {
+    @apply flex flex-col flex-grow h-full w-full text-base overflow-y-auto no-scrollbar mt-2 ml-2;
+}
+
+.resultSection {
+    @apply place-self-end text-4xl flex-shrink text-white mb-2 mr-2;
+}
+
+button {
+    @apply text-center border border-black rounded-full bg-gray-400 hover:bg-gray-300 text-white text-sm lg:text-xl mt-1 mb-1 mr-1 ml-1;
+}
+
+.operatorButton {
+    @apply bg-amber-500 hover:bg-amber-400;
+}
