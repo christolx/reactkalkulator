@@ -5,6 +5,7 @@ interface CalcState {
     firstOperand: number;
     secondOperand: number | null;
     operator: string | null;
+    error: boolean;
 }
 
 type ReducerAction =
@@ -12,7 +13,8 @@ type ReducerAction =
     | { type: 'SET_OPERATOR', payload: string }
     | { type: 'EVALUATE' }
     | { type: 'CLEAR' }
-    | { type: 'DELETE_DIGIT' };
+    | { type: 'DELETE_DIGIT' }
+    | { type: 'SET_ERROR', payload: boolean };
 
 const calculatorReducer = (state: CalcState | null, action: ReducerAction): CalcState | null => {
     switch (action.type) {
@@ -21,7 +23,8 @@ const calculatorReducer = (state: CalcState | null, action: ReducerAction): Calc
                 return {
                     firstOperand: action.payload,
                     secondOperand: null,
-                    operator: null
+                    operator: null,
+                    error : false
                 };
             }
 
@@ -32,7 +35,8 @@ const calculatorReducer = (state: CalcState | null, action: ReducerAction): Calc
                 };
             }
 
-            return {...state,
+            return {
+                ...state,
                 secondOperand: state.secondOperand === null ? action.payload : Number(`${state.secondOperand}${action.payload}`)
             };
         }
@@ -45,7 +49,8 @@ const calculatorReducer = (state: CalcState | null, action: ReducerAction): Calc
                 return {
                     firstOperand: result,
                     secondOperand: null,
-                    operator: action.payload
+                    operator: action.payload,
+                    error : false
                 };
             }
         }
@@ -59,7 +64,8 @@ const calculatorReducer = (state: CalcState | null, action: ReducerAction): Calc
             return {
                 firstOperand: result,
                 secondOperand: null,
-                operator: null
+                operator: null,
+                error : false
             };
         }
 
@@ -93,31 +99,34 @@ const calculatorReducer = (state: CalcState | null, action: ReducerAction): Calc
             };
         }
 
+        case 'SET_ERROR': {
+            return {...state, error: action.payload};
+        }
+
         default:
             return state;
     }
 };
 
-const evaluateExpression = (state: CalcState): number => {
-    const {firstOperand, secondOperand, operator} = state;
+const evaluateExpression = (state: CalcState): number | null => {
+    const { firstOperand, secondOperand, operator } = state;
 
     if (secondOperand === null || operator === null) return firstOperand;
 
-    switch (operator) {
-        case '+':
-            return firstOperand + secondOperand;
-        case '-':
-            return firstOperand - secondOperand;
-        case 'x':
-            return firstOperand * secondOperand;
-        case '/':
-            if (secondOperand === 0) {
-                alert('Cannot divide by zero');
-                return firstOperand;
-            }
-            return firstOperand / secondOperand;
-        default:
-            return firstOperand;
+    try {
+        switch (operator) {
+            case '+': return firstOperand + secondOperand;
+            case '-': return firstOperand - secondOperand;
+            case 'x': return firstOperand * secondOperand;
+            case '/':
+                if (secondOperand === 0) {
+                    return null;
+                }
+                return firstOperand / secondOperand;
+            default: return firstOperand;
+        }
+    } catch (error) {
+        return null;
     }
 };
 
@@ -136,9 +145,14 @@ function App() {
         }
     }, [history]);
 
-    const displayValue = calcState ? (calcState.secondOperand !== null ? calcState.secondOperand : (calcState.operator !== null
-                ? calcState.operator
-                : calcState.firstOperand))
+    const displayValue = calcState
+        ? (calcState.error
+            ? 'Err'
+            : (calcState.secondOperand !== null
+                ? calcState.secondOperand
+                : (calcState.operator !== null
+                    ? calcState.operator
+                    : calcState.firstOperand)))
         : 0;
 
     const handleNumberClick = (number: number) => {
@@ -160,8 +174,12 @@ function App() {
             calcState?.secondOperand !== null &&
             calcState?.operator !== null) {
             const result = evaluateExpression(calcState);
-            updateHistory(result);
-            dispatch({type: 'EVALUATE'});
+            if (result === null) {
+                dispatch({ type: 'SET_ERROR', payload: true });
+            } else {
+                updateHistory(result);
+                dispatch({ type: 'EVALUATE' });
+            }
         }
     };
 
